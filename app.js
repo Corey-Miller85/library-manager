@@ -17,14 +17,12 @@ function asyncHandler(cb) {
 		try {
 			await cb(req, res, next);
 		} catch (error) {
-			throw error;
+			next(error);
 		}
 	};
 }
 
 app.use(express.static("public"));
-
-const limit = 5;
 
 // GET REQUESTS
 
@@ -51,18 +49,11 @@ app.get(
 	"/books/:id",
 	asyncHandler(async (req, res) => {
 		const book = await Book.findByPk(req.params.id);
-		/***********************************************
-		 **************FIX THIS JUNK!********************
-		 ************************************************/
-		if (book === null) {
-			let error = {
-				message: "Could not find Database entry.",
-				status: "Error Code: 500"
-			};
-			res.render("page-not-found", { error });
-		} else {
-			res.render("update-book", { book });
+		if (book == null) {
+			const err = new Error(`No entry with the ID of ${req.params.id}`);
+			throw err;
 		}
+		res.render("update-book", { book });
 	})
 );
 
@@ -71,9 +62,22 @@ app.get(
 app.post(
 	"/books/new",
 	asyncHandler(async (req, res) => {
-		const newBook = await Book.create(req.body);
-		console.log(newBook.toJSON(), "::Created");
-		res.redirect("/books");
+		try {
+			const newBook = await Book.create(req.body);
+			console.log(newBook.toJSON(), "::Created");
+			res.redirect("/books");
+		} catch (error) {
+			if (error.name === "SequelizeValidationError") {
+				book = await Book.build(req.body);
+				res.render("new-book", {
+					book,
+					errors: error.errors,
+					title: "New Book"
+				});
+			} else {
+				throw error;
+			}
+		}
 	})
 );
 
