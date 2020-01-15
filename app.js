@@ -17,7 +17,7 @@ function asyncHandler(cb) {
 		try {
 			await cb(req, res, next);
 		} catch (error) {
-			res.status(500).send(error);
+			next(error);
 		}
 	};
 }
@@ -49,7 +49,11 @@ app.get(
 	"/books/:id",
 	asyncHandler(async (req, res) => {
 		const book = await Book.findByPk(req.params.id);
-		res.render("update-book", { book: book });
+		if (book == null) {
+			const err = new Error(`No entry with the ID of ${req.params.id}`);
+			throw err;
+		}
+		res.render("update-book", { book });
 	})
 );
 
@@ -58,9 +62,22 @@ app.get(
 app.post(
 	"/books/new",
 	asyncHandler(async (req, res) => {
-		const newBook = await Book.create(req.body);
-		console.log(newBook.toJSON(), "::Created");
-		res.redirect("/books");
+		try {
+			const newBook = await Book.create(req.body);
+			console.log(newBook.toJSON(), "::Created");
+			res.redirect("/books");
+		} catch (error) {
+			if (error.name === "SequelizeValidationError") {
+				book = await Book.build(req.body);
+				res.render("new-book", {
+					book,
+					errors: error.errors,
+					title: "New Book"
+				});
+			} else {
+				throw error;
+			}
+		}
 	})
 );
 
@@ -82,5 +99,21 @@ app.post(
 		res.redirect("/books");
 	})
 );
+
+/* Error Handlers */
+
+//404 page not found
+app.use((req, res, next) => {
+	const err = new Error(
+		"Sorry, we couldn't find the page you were looking for."
+	);
+	err.status = 404;
+	next(err);
+});
+
+//Render Error Page
+app.use((err, req, res, next) => {
+	res.render("page-not-found", { error: err });
+});
 
 app.listen(PORT, () => console.log(`Server Open, Listening on Port: ${PORT}`));

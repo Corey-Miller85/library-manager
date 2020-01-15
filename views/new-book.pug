@@ -2,11 +2,12 @@ extends ./layout
 block content
   h1 New Book
   form(action="/books/new" method="POST")
-    if(errors)
+    if errors
       h2.error Oooops!
         ul.error
           each error in errors
             li= error.message
+    
     p
       label(for='title') Title
       input#title(name='title' type='text')
