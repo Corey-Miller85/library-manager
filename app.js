@@ -17,7 +17,7 @@ function asyncHandler(cb) {
 		try {
 			await cb(req, res, next);
 		} catch (error) {
-			res.status(500).send(error);
+			throw error;
 		}
 	};
 }
@@ -49,7 +49,18 @@ app.get(
 	"/books/:id",
 	asyncHandler(async (req, res) => {
 		const book = await Book.findByPk(req.params.id);
-		res.render("update-book", { book: book });
+		/***********************************************
+		 **************FIX THIS JUNK!********************
+		 ************************************************/
+		if (book === null) {
+			let error = {
+				message: "Could not find Database entry.",
+				status: "Error Code: 500"
+			};
+			res.render("page-not-found", { error });
+		} else {
+			res.render("update-book", { book: book });
+		}
 	})
 );
 
@@ -82,5 +93,21 @@ app.post(
 		res.redirect("/books");
 	})
 );
+
+/* Error Handlers */
+
+//404 page not found
+app.use((req, res, next) => {
+	const err = new Error(
+		"Sorry, we couldn't find the page you were looking for."
+	);
+	err.status = 404;
+	next(err);
+});
+
+//Render Error Page
+app.use((err, req, res, next) => {
+	res.render("page-not-found", { error: err });
+});
 
 app.listen(PORT, () => console.log(`Server Open, Listening on Port: ${PORT}`));
