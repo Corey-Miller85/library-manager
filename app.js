@@ -25,6 +25,11 @@ function asyncHandler(cb) {
 app.use(express.static("public"));
 
 // GET REQUESTS
+let totalBooks = 0;
+(async () => {
+	const books = await Book.findAll();
+	totalBooks = books.length;
+})();
 
 app.get(
 	"/",
@@ -36,8 +41,21 @@ app.get(
 app.get(
 	"/books",
 	asyncHandler(async (req, res) => {
-		const books = await Book.findAll();
-		res.render("index", { books: books });
+		const books = await Book.findAll({
+			limit: 5
+		});
+		res.render("index", { books: books, totalBooks: totalBooks });
+	})
+);
+
+app.get(
+	"/books/page/:pageNumber",
+	asyncHandler(async (req, res) => {
+		const books = await Book.findAll({
+			offset: req.params.pageNumber * 5,
+			limit: 5
+		});
+		res.render("index", { books, totalBooks });
 	})
 );
 

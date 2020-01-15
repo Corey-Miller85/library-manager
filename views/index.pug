@@ -18,3 +18,10 @@ block content
           td= book.author
           td= book.genre
           td= book.year
+
+  div.pagination
+  h5 Go to Page...
+    ul.pagination-list
+      - for (let i=0; i < Math.ceil(totalBooks / 5); i++)
+        li.pagination-links
+          a(href="/books/page/" + i)= i + 1
