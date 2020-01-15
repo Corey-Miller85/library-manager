@@ -24,6 +24,8 @@ function asyncHandler(cb) {
 
 app.use(express.static("public"));
 
+const limit = 5;
+
 // GET REQUESTS
 
 app.get(
@@ -59,7 +61,7 @@ app.get(
 			};
 			res.render("page-not-found", { error });
 		} else {
-			res.render("update-book", { book: book });
+			res.render("update-book", { book });
 		}
 	})
 );
