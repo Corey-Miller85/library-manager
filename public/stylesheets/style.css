@@ -98,3 +98,15 @@ input[type="text"] {
 .error {
 	color: rgb(236, 15, 15);
 }
+
+.pagination-list {
+	display: inline-flex;
+}
+
+.pagination-list .pagination-links {
+	border: #019875 solid 2px;
+	margin-right: 10px;
+	margin-left: 75px;
+	padding: 5px 5px;
+	background-color: #73e9cd;
+}
